@@ -1,7 +1,3 @@
-# new dispatcher.py
-# written by Alex Iannantuono
-# hoping this works!!
-
 import multiprocessing as mp
 import os
 import shutil

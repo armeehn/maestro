@@ -1,6 +1,4 @@
-# experiment manager 1.0
-# written by Alex Iannantuono
-# -*- coding: utf-8 -*-
+# maestro 1.0
 
 #### important stuff ####
 

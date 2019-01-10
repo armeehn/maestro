@@ -1,5 +1,4 @@
 # shout out to jonathan slenders for this nifty piece of code
-# completer.py
 # modified for my needs
 
 from __future__ import unicode_literals

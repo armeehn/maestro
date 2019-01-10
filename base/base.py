@@ -1,7 +1,3 @@
-# to be used for the experiment manager
-# state.py
-# written by Alex Iannantuono
-
 import json
 import psutil
 import os
