@@ -223,17 +223,20 @@ while True:
             if answer['y/n']:
                 to_delete = input('Enter the batch IDs to delete,'
                                             ' separated by spaces: ').split(' ')
-                for d in to_delete:
-                    if not d.isdigit() or d not in state.batches.keys():
-                        print('Attempted to delete non-existent batch, skipping.')
-                    else:
-                        del state.batches[int(d)]
+                if state.batches != {}:
+                    for d in to_delete:
+                        if not d.isdigit() and d not in state.batches.keys():
+                            print('Attempted to delete non-existent batch, skipping.')
+                        else:
+                            del state.batches[int(d)]
 
-                        try:
-                            shutil.rmtree(os.path.join(settings['queue_dir'],
-                                                                'batch-' + d))
-                        except FileNotFoundError:
-                            pass
+                            try:
+                                shutil.rmtree(os.path.join(settings['queue_dir'],
+                                                                    'batch-' + d))
+                            except FileNotFoundError:
+                                pass
+                else:
+                    print('Job history is empty.')
 
             q.put(state)
 

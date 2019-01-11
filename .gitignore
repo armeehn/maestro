@@ -14,3 +14,4 @@ logs/
 *.bbl
 *.blg
 .DS_Store
+maestro_sys/

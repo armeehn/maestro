@@ -74,7 +74,7 @@ class Dispatcher():
                         file = os.path.join(folder, file)
                         l.append(file) if file.endswith('.sh') else None
         return l
-
+        
     def gpu(self):
         """
             Check for available GPUs using NVIDIA's PMON tool.
@@ -139,6 +139,13 @@ class Dispatcher():
                                     pid = process.pid,
                                     status = 'completed')
 
+                        # move to completed folder
+
+                        completed = os.path.join(self.dir, 'completed')
+                        fname = os.path.basename(job_name)
+                        shutil.move(os.path.join(self.run, fname),
+                                                os.path.join(completed,fname))
+
                     else:
                         logging.warning("%s returned %d", job_name,
                         process.poll())
@@ -146,6 +153,12 @@ class Dispatcher():
                                     job = job_name,
                                     pid = process.pid,
                                     status = 'failed')
+
+                        failed = os.path.join(self.dir, 'failed')
+                        fname = os.path.basename(job_name)
+                        shutil.move(os.path.join(self.run, fname),
+                                                os.path.join(failed, fname))
+
 
                     # Remove job from running jobs
                     del running[job_name]
@@ -269,7 +282,7 @@ class Dispatcher():
                             status = 'running')
             except PermissionError as err:
                 logging.warning("PermissionError: {0}".format(err))
-                # Will get moved in upper code on next iteration
+
                 self.mark(  q = self.q,
                             job = current_job,
                             pid = None,
