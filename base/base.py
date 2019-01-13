@@ -36,7 +36,7 @@ class Process():
         return info_dict.__repr__()
 
     def kill(self):
-        if self.status != 'completed' and self.pid is not None:
+        if self.status == 'running' and self.pid is not None:
             try:
                 psutil.Process(self.pid).kill()
                 self.status = 'killed'
@@ -45,10 +45,15 @@ class Process():
                 print('whoa there, something is off... '
                             'maybe it\'s actually completed?')
                 time.sleep(20) # inner delay
-                if self.status != 'completed':
+                if self.status == 'killed':
+                    print('Process was already killed, aborting...')
+                elif self.status != 'completed':
                     print('k, something is off...')
-        else:
+        elif self.status == 'queued':
             self.status = 'killed'
+        else:
+            # Trying to kill already killed or completed process
+            pass
 
 class Batch():
     """
@@ -106,6 +111,7 @@ class State():
     def __init__(self, batches = {}):
         #super(State, self).__init__()
         self.batches = self.to_dict(batches)
+        print(self.batches)
 
     #### methods ####
 

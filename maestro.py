@@ -202,28 +202,31 @@ while True:
 
         elif answer['main menu'] == 'view':
             state = q.get()
-            for bid in state.batches.keys():
-                batch = state.batches[bid]
-                header = ('BATCH ID: %g \t\t LABEL: %s' % (bid, batch.label))
-                print(header)
-                print(dash)
-                print('PROCESSES:')
-                print('{:<10s}{:<36s}{:<20s}{:<10s}'.format('pid', 'filename', 'log', 'status'))
-                print(dash)
-                for proc in batch.processes:
-                    dic = proc.__dict__
-                    dic['filename'] = os.path.basename(dic['filename'])
-                    replace = lambda x: '~' if x is None else str(x)
-                    print('{:<10s}{:<36s}{:<20s}{:<10s}'.format(*[replace(x) for x in dic.values()]))
-                print('')
+            if state.batches == {}:
+                print('Job history is empty.')
 
-            # ask if you want to delete records...
-            print('Do you want to delete some history of records?')
-            answer = prompt(confirm)
-            if answer['y/n']:
-                to_delete = input('Enter the batch IDs to delete,'
-                                            ' separated by spaces: ').split(' ')
-                if state.batches != {}:
+            else:
+                for bid in state.batches.keys():
+                    batch = state.batches[bid]
+                    header = ('BATCH ID: %g \t\t LABEL: %s' % (bid, batch.label))
+                    print(header)
+                    print(dash)
+                    print('PROCESSES:')
+                    print('{:<10s}{:<36s}{:<20s}{:<10s}'.format('pid', 'filename', 'log', 'status'))
+                    print(dash)
+                    for proc in batch.processes:
+                        dic = proc.__dict__
+                        dic['filename'] = os.path.basename(dic['filename'])
+                        replace = lambda x: '~' if x is None else str(x)
+                        print('{:<10s}{:<36s}{:<20s}{:<10s}'.format(*[replace(x) for x in dic.values()]))
+                    print('')
+
+                # ask if you want to delete records...
+                print('Do you want to delete some history of records?')
+                answer = prompt(confirm)
+                if answer['y/n']:
+                    to_delete = input('Enter the batch IDs to delete,'
+                                                ' separated by spaces: ').split(' ')
                     for d in to_delete:
                         if not d.isdigit() and d not in state.batches.keys():
                             print('Attempted to delete non-existent batch, skipping.')
@@ -235,8 +238,6 @@ while True:
                                                                     'batch-' + d))
                             except FileNotFoundError:
                                 pass
-                else:
-                    print('Job history is empty.')
 
             q.put(state)
 
@@ -354,9 +355,9 @@ while True:
                     inp = input('Enter a wait time between checking'
                                                     ' for new scripts? ')
 
-                    while(not inp.isdigit() or int(inp) < 60):
+                    while(not inp.isdigit() or int(inp) < 30):
                         inp = input('Please enter an integer greater'
-                                                            ' or equal to 60: ')
+                                                            ' or equal to 30: ')
                     wait = int(inp)
 
                     d = dispatcher.Dispatcher(
@@ -415,33 +416,38 @@ while True:
                 answer = input('Input the ID of the process'
                                                     ' you wish to cancel: ')
                 kv_id = {}
-                for (k, b) in state.batches.items():
-                    kv_id[k] = state.b.get_all_id()
+                for k in state.batches.keys():
+                    kv_id[k] = state.batches[k].get_all_id()
 
                 # a neat way to flatten a list of lists
                 all = [item for sublist in kv_id.values() for item in sublist]
                 while(not answer.isdigit() and answer not in all):
                     answer = input('Please try again: ')
 
+                answer = int(answer)
                 # kill the process (must perform a search)
-                for b in state.batches:
+                for b in state.batches.values():
                     if answer in b.get_all_id():
                         for p in b.processes:
                             if answer == p.pid:
+                                print('Killing Process %g' % p.pid)
                                 p.kill()
                                 break
                         break
 
             elif answer['cancel menu'] == 'batch':
                 answer = input('Input the ID of the batch you wish to cancel: ')
-                while(not answer.isdigit() and \
-                    answer not in state.batches.keys()):
+                while(not answer.isdigit() or int(answer) < 0 or \
+                    int(answer) not in state.batches.keys()):
                         answer = input('Please try again: ')
 
                 print('Killing batch ID %g' % int(answer))
                 dir = os.path.join(settings['queue_dir'], 'batch-' + answer)
                 state.batches[int(answer)].kill()
-                shutil.rmtree(dir)
+                try:
+                    shutil.rmtree(dir)
+                except FileNotFoundError:
+                    print('Trying to kill batch that already was killed.')
 
 
             elif answer['cancel menu'] == 'back':

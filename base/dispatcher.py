@@ -74,7 +74,7 @@ class Dispatcher():
                         file = os.path.join(folder, file)
                         l.append(file) if file.endswith('.sh') else None
         return l
-        
+
     def gpu(self):
         """
             Check for available GPUs using NVIDIA's PMON tool.
@@ -149,7 +149,8 @@ class Dispatcher():
                     else:
                         logging.warning("%s returned %d", job_name,
                         process.poll())
-                        self.mark(  q = self.q,
+                        if process.poll() != -9:
+                            self.mark(  q = self.q,
                                     job = job_name,
                                     pid = process.pid,
                                     status = 'failed')
@@ -280,6 +281,7 @@ class Dispatcher():
                             job = current_job,
                             pid = p.pid,
                             status = 'running')
+
             except PermissionError as err:
                 logging.warning("PermissionError: {0}".format(err))
 
