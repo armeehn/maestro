@@ -11,9 +11,8 @@ except ImportError:
 
 #### stuff for the interface ####
 
-from PyInquirer import style_from_dict, Token, prompt, Separator, print_json
+import questionary
 import prompt_toolkit
-from examples import custom_style_2
 
 #### general imports ####
 
@@ -36,54 +35,15 @@ from pyfiglet import Figlet
 
 #### general usage things ####
 
-confirm = [
-    {
-        'type': 'confirm',
-        'name': 'y/n',
-        'message': 'Are you sure?'
-    }
-]
 main_menu = ['view','load','start/stop','clear','kill','exit']
 
-command_prompt = [
-    {
-        'type': 'expand',
-        'message': 'Choose a command: ',
-        'name': 'main menu',
-        'choices': [
-            {
-                'key': 'v',
-                'name': 'Overview of the job history',
-                'value': 'view'
-            },
-            {
-                'key': 'l',
-                'name': 'Load files into the dispatcher',
-                'value': 'load'
-            },
-            {
-                'key': 's',
-                'name': 'Start/Stop the dispatcher',
-                'value': 'start'
-            },
-            {
-                'key': 'k',
-                'name': 'Kill batch or specific process',
-                'value': 'cancel'
-            },
-            {
-                'key': 'c',
-                'name': 'Clear current screen',
-                'value': 'clear'
-            },
-            {
-                'key': 'e',
-                'name': 'Exit the experiment manager',
-                'value': 'exit'
-            }
-        ]
-    }
-]
+commands = [    'Overview of the job history',
+                'Load files into the dispatcher',
+                'Start/Stop the dispatcher',
+                'Kill batch or specific process',
+                'Clear current screen',
+                'Exit the experiment manager'
+            ]
 
 dash = '- ' * 40 # for viewing batches
 
@@ -184,9 +144,10 @@ saver.start()
 while True:
     try:
         print('Options:', *main_menu)
-        answer = prompt(command_prompt)
+        answer = questionary.select('What do you want to do?',
+                                            choices=commands).ask()
 
-        if answer['main menu'] == 'exit':
+        if answer == 'Exit the experiment manager':
             try:
                 pid = settings['dispatcher']
                 alive = psutil.pid_exists(pid)
@@ -197,10 +158,10 @@ while True:
             except KeyError:
                 raise SystemExit
 
-        elif answer['main menu'] == 'clear':
+        elif answer == 'Clear current screen':
             os.system('clear')
 
-        elif answer['main menu'] == 'view':
+        elif answer == 'Overview of the job history':
             state = q.get()
             if state.batches == {}:
                 print('Job history is empty.')
@@ -223,8 +184,8 @@ while True:
 
                 # ask if you want to delete records...
                 print('Do you want to delete some history of records?')
-                answer = prompt(confirm)
-                if answer['y/n']:
+                answer = questionary.confirm('Are you sure?').ask()
+                if answer:
                     to_delete = input('Enter the batch IDs to delete,'
                                                 ' separated by spaces: ').split(' ')
                     for d in to_delete:
@@ -241,7 +202,7 @@ while True:
 
             q.put(state)
 
-        elif answer['main menu'] == 'load':
+        elif answer == 'Load files into the dispatcher':
             state = q.get()
             files = prompt_toolkit.prompt('Enter files you wish to load (* wildcard allowed): ',
                 completer=fscompleter.PathCompleter(),
@@ -254,8 +215,8 @@ while True:
                 print('You\'ve loaded %g file(s) '
                             'into the manager.' % len(globbed))
 
-                answer = prompt(confirm)
-                if answer['y/n']: #if yes
+                answer = questionary.confirm('Are you sure?').ask()
+                if answer: #if yes
                     label = input('Please type in a label for this batch: ')
                     try:
                         k = list(state.batches.keys())
@@ -287,36 +248,19 @@ while True:
                         shutil.copy(file, os.path.join(batch_folder, os.path.basename(file)))
 
             q.put(state)
-        elif answer['main menu'] == 'start':
+        elif answer == 'Start/Stop the dispatcher':
             # start the dispatcher
             print('Some questions before we start the dispatcher...')
-            menu = [
-                        {
-                            'type': 'list',
-                            'name': 'start menu',
-                            'message': 'What do you want to do?',
-                            'choices': [
-                                {
-                                    'name': 'Start Dispatcher',
-                                    'value': 'start'
-                                },
-                                {
-                                    'name': 'Stop Dispatcher',
-                                    'value': 'stop'
-                                },
-                                {
-                                    'name': 'Back to Main Menu',
-                                    'value': 'back'
-                                }
-                            ]
-                        }
-                ]
-            answer = prompt(menu)
+            menu = [    'Start Dispatcher',
+                        'Stop Dispatcher',
+                        'Back to Main Menu'
+                        ]
+            answer = questionary.select('What do you want to do?', choices = menu).ask()
 
-            if answer['start menu'] == 'back':
+            if answer == 'Back to Main Menu':
                 continue
 
-            elif answer['start menu'] == 'start':
+            elif answer == 'Start Dispatcher':
                 # check if there is already a dispatcher running
                 try:
                     pid = settings['dispatcher']
@@ -372,7 +316,7 @@ while True:
                     settings['dispatcher'] = pid
                     print('Dispatcher has been started.')
 
-            elif answer['start menu'] == 'stop':
+            elif answer == 'Stop Dispatcher':
                 try:
                     pid = settings['dispatcher']
                     # settings['dispatcher'] contains the PID
@@ -386,33 +330,17 @@ while True:
             else:
                 print('What else is there to do?')
 
-        elif answer['main menu'] == 'cancel':
+        elif answer == 'Kill batch or specific process':
             state = q.get()
-            menu = [
-                {
-                    'type': 'list',
-                    'message': 'Choose a command: ',
-                    'name': 'cancel menu', # top of loop
-                    'choices': [
-                        {
-                            'name': 'Kill certain process',
-                            'value': 'process'
-                        },
-                        {
-                            'name': 'Kill all processes in a batch',
-                            'value': 'batch'
-                        },
-                        {
-                            'name': 'Go back to main menu',
-                            'value': 'back'
-                        }
-                    ]
-                }
-            ]
 
-            answer = prompt(menu)
+            menu = [    'Kill certain process',
+                        'Kill all processes in a batch',
+                        'Go back to main menu'
+                ]
 
-            if answer['cancel menu'] == 'process':
+            answer = questionary.select('What do you want to do?', choices = menu).ask()
+
+            if answer == 'Kill certain process':
                 answer = input('Input the ID of the process'
                                                     ' you wish to cancel: ')
                 kv_id = {}
@@ -435,7 +363,7 @@ while True:
                                 break
                         break
 
-            elif answer['cancel menu'] == 'batch':
+            elif answer == 'Kill all processes in a batch':
                 answer = input('Input the ID of the batch you wish to cancel: ')
                 while(not answer.isdigit() or int(answer) < 0 or \
                     int(answer) not in state.batches.keys()):
@@ -450,7 +378,7 @@ while True:
                     print('Trying to kill batch that already was killed.')
 
 
-            elif answer['cancel menu'] == 'back':
+            elif answer == 'Go back to main menu':
                 continue
 
             else:

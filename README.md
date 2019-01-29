@@ -16,11 +16,11 @@ The purpose of maestro is to ease the process of running experiments. Whether it
 
 ## Dependencies
 
-We make use of [pyfiglet](https://github.com/pwaller/pyfiglet) and [PyInquirer](https://github.com/CITGuru/PyInquirer) (we use the latter heavily for the interface to be able to ask the user questions).
+We make use of [pyfiglet](https://github.com/pwaller/pyfiglet) and ~~[PyInquirer](https://github.com/CITGuru/PyInquirer) (we use the latter heavily for the interface to be able to ask the user questions)~~ I am happy to announce that it now uses [questionary](https://github.com/tmbo/questionary) and the dependency issue is fixed, i.e. we can all use the latest version of iPython.
 
-## Known Issue (nothing serious)
+## ~~Known Issue (nothing serious)~~
 
-Now, as it stands, since maestro relies on `PyInquirer` which has an older version `prompt_toolkit` as a dependency, for this to work, we need that version. I am working on a fix. The known problem arises when you need one of the later versions of iPython. However, if you can get away with using version 5.8.0 (I've tested it and it works) then I would suggest doing that until a fix is found.
+~~Now, as it stands, since maestro relies on `PyInquirer` which has an older version `prompt_toolkit` as a dependency, for this to work, we need that version. I am working on a fix. The known problem arises when you need one of the later versions of iPython. However, if you can get away with using version 5.8.0 (I've tested it and it works) then I would suggest doing that until a fix is found.~~ Fixed.
 
 ## Features To Come
 
